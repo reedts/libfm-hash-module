@@ -36,6 +36,9 @@
 *.x86_64
 *.hex
 
+# Vim files
+*.swp
+
 # Debug files
 *.dSYM/
 *.su
