@@ -9,21 +9,30 @@
 
 static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
 {
-
-        g_warning("Init...\n");
+        guint n_row, n_col;
 
         GtkWidget *md5_lb;
-        GtkTable *table;
+        GtkWidget *table;
 
-        md5_lb = gtk_label_new("MD5");
+        md5_lb = GTK_LABEL(gtk_label_new(NULL));
+        gtk_label_set_markup(GTK_LABEL(md5_lb), "<b>MD5sum:</b>");
+        gtk_misc_set_alignment(GTK_MISC(md5_lb), 0.0f, 0.5f);
+
+        g_object_ref_sink(md5_lb);
 
         table = GTK_TABLE(gtk_builder_get_object(ui, "general_table"));
+        gtk_table_get_size(table, &n_row, &n_col);
+
+        gtk_table_attach_defaults(table, md5_lb, 0, 2, n_row, n_row+1);
+
+        gtk_widget_show(md5_lb);
 
         return md5_lb;
 }
 
 static void md5_finish(gpointer data, gboolean cancelled)
 {
+        gtk_widget_destroy(data);
         g_object_unref(data);
 }
 
