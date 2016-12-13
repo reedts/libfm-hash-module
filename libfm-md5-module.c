@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <glib.h>
 #include <errno.h>
 
@@ -37,8 +38,8 @@ static gchar *md5_calc_hash(FmPath *path, GError **err)
         }
 
         path_str = NULL;
-
-        hash = g_malloc0(MD5_DIGEST_LENGTH); 
+        
+        hash = g_malloc0(MD5_DIGEST_STRING_LENGTH); 
         
         if (!hash) {
                 errno = ENOMEM;
@@ -57,7 +58,7 @@ static gchar *md5_calc_hash(FmPath *path, GError **err)
         }
 
         MD5Init(&ctx);
-
+        
         MD5File(path_str, hash);
 
         if (!hash) {
@@ -66,7 +67,7 @@ static gchar *md5_calc_hash(FmPath *path, GError **err)
                             "No hash: %s", g_strerror(errno));
                 goto err_clean_up_ret;
         }
-
+        
         g_free(path_str);
         return hash;
 
@@ -87,8 +88,6 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
 
         guint n_row, n_col;
 
-        GtkWidget *md5_label;
-        GtkWidget *md5_hash_label;
         GtkWidget *table;
         
         file = fm_file_info_list_peek_head(files);
@@ -98,13 +97,11 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
                 return NULL;
         }
         
-        struct md5_row *row = g_malloc0(sizeof(struct md5_row));
+        struct md5_row *row = malloc(sizeof(struct md5_row));
+        memset(row, 0x00, sizeof(struct md5_row));
 
-        md5_label = gtk_label_new(NULL);
-        md5_hash_label = gtk_label_new(NULL);
-
-        row->label = md5_label;
-        row->hash = md5_hash_label;
+        row->label = gtk_label_new(NULL);
+        row->hash = gtk_label_new(NULL);
 
         g_object_ref_sink(row->label);
         g_object_ref_sink(row->hash);
@@ -112,10 +109,12 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
         gtk_label_set_markup(GTK_LABEL(row->label), "<b>MD5sum:</b>");
         gtk_misc_set_alignment(GTK_MISC(row->label), 0.0f, 0.5f);
 
+        gtk_label_set_line_wrap(GTK_LABEL(row->hash), TRUE);
+
         table = GTK_WIDGET(gtk_builder_get_object(ui, "general_table"));
         gtk_table_get_size(GTK_TABLE(table), &n_row, &n_col);
         gtk_table_attach_defaults(GTK_TABLE(table), row->label, 0, 1, n_row, n_row+1);
-        gtk_table_attach_defaults(GTK_TABLE(table), row->hash, 1, 2, n_row, n_row+1);
+        gtk_table_attach_defaults(GTK_TABLE(table), row->hash, 2, 3, n_row, n_row+1);
 
 
         gtk_widget_show(row->label);
@@ -126,10 +125,15 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
 
         hash = md5_calc_hash(path, &err);
 
-        if (!hash) {
+
+        if (!hash || strlen(hash) == 0) {
                 g_warning(err->message);
                 goto no_output;
         }
+
+        g_warning("Hash: %s", hash);
+
+        gtk_label_set_text(GTK_LABEL(row->hash), hash);
 
         return row;
 
@@ -140,7 +144,7 @@ no_output:
         g_object_unref(row->label);
         g_object_unref(row->hash);
 
-        g_free(row);
+        free(row);
         
         return NULL;
 }
@@ -151,10 +155,10 @@ static void md5_finish(gpointer pdata, gboolean cancelled)
         if (data) {
                 gtk_widget_destroy(data->label);
                 gtk_widget_destroy(data->hash);
-                g_object_unref(data->label);
+                //g_object_unref(data->label);
                 g_object_unref(data->hash);
 
-                g_free(data);
+                free(data);
         }
 }
 
