@@ -1,30 +1,107 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
+#include <errno.h>
+
+#include <bsd/md5.h>
+#include <sys/types.h>
 
 #include <libfm/fm.h>
 #include <libfm/fm-gtk.h>
 #include <libfm/fm-file-properties.h>
+
+#define MD5_HASH_ERR md5_calc_hash_error_quark()
+
+GQuark md5_calc_hash_error_quark(void)
+{
+        return g_quark_from_static_string("MD5_CALC_HASH_ERR");
+}
+
 
 struct md5_row {
         GtkWidget *label;
         GtkWidget *hash;
 };
 
+static gchar *md5_calc_hash(FmPath *path, GError **err)
+{
+        MD5_CTX ctx;
+        char *path_str;
+        gchar *hash;
 
+        if (!path) {
+                errno = EINVAL;
+                g_set_error(err, MD5_HASH_ERR, errno,
+                            "Invalid path: %s", g_strerror(errno));
+                goto err_ret;
+        }
+
+        path_str = NULL;
+
+        hash = g_malloc0(MD5_DIGEST_LENGTH); 
+        
+        if (!hash) {
+                errno = ENOMEM;
+                g_set_error(err, MD5_HASH_ERR, errno,
+                            "No memory allocated: %s", g_strerror(errno));
+                goto err_clean_up_ret;
+        }
+        
+        path_str = fm_path_to_str(path);
+
+        if (!path_str) {
+                errno = EINVAL;
+                g_set_error(err, MD5_HASH_ERR, errno,
+                            "Invalid path: %s", g_strerror(errno));
+                goto err_clean_up_ret;
+        }
+
+        MD5Init(&ctx);
+
+        MD5File(path_str, hash);
+
+        if (!hash) {
+                errno = EIO;
+                g_set_error(err, MD5_HASH_ERR, errno,
+                            "No hash: %s", g_strerror(errno));
+                goto err_clean_up_ret;
+        }
+
+        g_free(path_str);
+        return hash;
+
+err_clean_up_ret:
+        g_free(hash);
+        g_free(path_str);
+err_ret:
+        return NULL;
+}
 
 static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
 {
+        GError *err;
+        gchar *hash;
+        
+        FmPath *path;
+        FmFileInfo *file;
+
         guint n_row, n_col;
 
         GtkWidget *md5_label;
         GtkWidget *md5_hash_label;
         GtkWidget *table;
         
+        file = fm_file_info_list_peek_head(files);
+
+        if ((path = fm_file_info_get_path(file)) == NULL) {
+                errno = ENOENT;
+                return NULL;
+        }
+        
         struct md5_row *row = g_malloc0(sizeof(struct md5_row));
 
-        md5_label = GTK_LABEL(gtk_label_new(NULL));
-        md5_hash_label = GTK_LABEL(gtk_label_new(NULL));
+        md5_label = gtk_label_new(NULL);
+        md5_hash_label = gtk_label_new(NULL);
 
         g_object_ref_sink(md5_label);
         g_object_ref_sink(md5_hash_label);
@@ -32,15 +109,24 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
         gtk_label_set_markup(GTK_LABEL(md5_label), "<b>MD5sum:</b>");
         gtk_misc_set_alignment(GTK_MISC(md5_label), 0.0f, 0.5f);
 
-        table = GTK_TABLE(gtk_builder_get_object(ui, "general_table"));
-        gtk_table_get_size(table, &n_row, &n_col);
-        gtk_table_attach_defaults(table, md5_label, 0, 1, n_row, n_row+1);
-        gtk_table_attach_defaults(table, md5_hash_label, 1, 2, n_row, n_row+1);
+        table = GTK_WIDGET(gtk_builder_get_object(ui, "general_table"));
+        gtk_table_get_size(GTK_TABLE(table), &n_row, &n_col);
+        gtk_table_attach_defaults(GTK_TABLE(table), md5_label, 0, 1, n_row, n_row+1);
+        gtk_table_attach_defaults(GTK_TABLE(table), md5_hash_label, 1, 2, n_row, n_row+1);
+
 
         gtk_widget_show(md5_label);
         gtk_widget_show(md5_hash_label);
         
         /* Try to calculate HASH here */
+        err = NULL;
+
+        hash = md5_calc_hash(path, &err);
+
+        if (!hash) {
+                g_warning(err->message);
+                goto no_output;
+        }
 
         row->label = md5_label;
         row->hash = md5_hash_label;
@@ -54,7 +140,7 @@ no_output:
         g_object_unref(md5_label);
         g_object_unref(md5_hash_label);
 
-        gfree(row);
+        g_free(row);
         
         return NULL;
 
