@@ -1,7 +1,7 @@
 .PHONY: all install clean dist-clean
 
 CC = gcc
-CFLAGS += -Wall -pedantic -shared -fPIC -Wl,-z,defs
+CFLAGS += -Wall -Werror -Wno-deprecated-declarations -pedantic -shared -fPIC -Wl,-z,defs
 LDFLAGS += -lbsd
 
 FMLIBS := $(shell pkg-config --cflags --libs libfm)
