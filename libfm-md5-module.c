@@ -1,8 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <glib.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <bsd/md5.h>
 #include <sys/types.h>
@@ -24,11 +24,26 @@ struct md5_row {
         GtkWidget *hash;
 };
 
+/*!
+ * \brief Calculates the hash of a file.
+ *
+ * The function \p md5_calc_hash calculated the md5 hash value of
+ * the file in path \p path. The function will return \p NULL on
+ * error, idicating the type of error in \p err. The returned string
+ * has to be freed manually.
+ *
+ * \param path Absolute path to the file whose hash shall be
+ *             calculated.
+ * \param err  \p GError indicating th type of the error, if the
+ *             function should return \p NULL.
+ * \return     The string representation of the md5 hash or \p NULL,
+ *             if an error occured.
+ */
 static gchar *md5_calc_hash(FmPath *path, GError **err)
 {
-        MD5_CTX ctx;
         char *path_str;
         gchar *hash;
+        MD5_CTX ctx;
 
         if (!path) {
                 errno = EINVAL;
