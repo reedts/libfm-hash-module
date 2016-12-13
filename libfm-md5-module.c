@@ -103,20 +103,23 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
         md5_label = gtk_label_new(NULL);
         md5_hash_label = gtk_label_new(NULL);
 
-        g_object_ref_sink(md5_label);
-        g_object_ref_sink(md5_hash_label);
+        row->label = md5_label;
+        row->hash = md5_hash_label;
 
-        gtk_label_set_markup(GTK_LABEL(md5_label), "<b>MD5sum:</b>");
-        gtk_misc_set_alignment(GTK_MISC(md5_label), 0.0f, 0.5f);
+        g_object_ref_sink(row->label);
+        g_object_ref_sink(row->hash);
+
+        gtk_label_set_markup(GTK_LABEL(row->label), "<b>MD5sum:</b>");
+        gtk_misc_set_alignment(GTK_MISC(row->label), 0.0f, 0.5f);
 
         table = GTK_WIDGET(gtk_builder_get_object(ui, "general_table"));
         gtk_table_get_size(GTK_TABLE(table), &n_row, &n_col);
-        gtk_table_attach_defaults(GTK_TABLE(table), md5_label, 0, 1, n_row, n_row+1);
-        gtk_table_attach_defaults(GTK_TABLE(table), md5_hash_label, 1, 2, n_row, n_row+1);
+        gtk_table_attach_defaults(GTK_TABLE(table), row->label, 0, 1, n_row, n_row+1);
+        gtk_table_attach_defaults(GTK_TABLE(table), row->hash, 1, 2, n_row, n_row+1);
 
 
-        gtk_widget_show(md5_label);
-        gtk_widget_show(md5_hash_label);
+        gtk_widget_show(row->label);
+        gtk_widget_show(row->hash);
         
         /* Try to calculate HASH here */
         err = NULL;
@@ -128,22 +131,18 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
                 goto no_output;
         }
 
-        row->label = md5_label;
-        row->hash = md5_hash_label;
-
         return row;
 
 no_output:
 
-        gtk_widget_destroy(md5_label);
-        gtk_widget_destroy(md5_hash_label);
-        g_object_unref(md5_label);
-        g_object_unref(md5_hash_label);
+        gtk_widget_destroy(row->label);
+        gtk_widget_destroy(row->hash);
+        g_object_unref(row->label);
+        g_object_unref(row->hash);
 
         g_free(row);
         
         return NULL;
-
 }
 
 static void md5_finish(gpointer pdata, gboolean cancelled)
