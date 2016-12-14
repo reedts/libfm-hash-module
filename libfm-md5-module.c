@@ -49,7 +49,7 @@ static gchar *md5_calc_hash(FmPath *path, GError **err)
                 errno = EINVAL;
                 g_set_error(err, MD5_HASH_ERR, errno,
                             "Invalid path: %s", g_strerror(errno));
-                goto err_ret;
+                return NULL;
         }
 
         path_str = NULL;
@@ -89,9 +89,18 @@ static gchar *md5_calc_hash(FmPath *path, GError **err)
 err_clean_up_ret:
         g_free(hash);
         g_free(path_str);
-err_ret:
         return NULL;
 }
+
+static inline gboolean md5_check_file(FmFileInfoList *files)
+{
+        FmFileInfo *file = fm_file_info_list_peek_head(files);
+        return ((fm_file_info_list_get_length(files) == 1) &&
+                (!fm_file_info_is_dir(file)) &&
+                (!fm_file_info_is_symlink(file))
+               );   
+}
+
 
 static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
 {
@@ -104,6 +113,11 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
         guint n_row, n_col;
 
         GtkWidget *table;
+
+        if (!md5_check_file(files)) {
+                errno = EINVAL;
+                return NULL;
+        }
         
         file = fm_file_info_list_peek_head(files);
 
@@ -141,9 +155,14 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
         hash = md5_calc_hash(path, &err);
 
 
-        if (!hash || strlen(hash) == 0) {
+        if (!hash) {
                 g_warning(err->message);
                 goto no_output;
+        }
+
+        if (strlen(hash) == 0) {
+                g_warning("Got empty hash!");
+                return NULL;
         }
 
         g_warning("Hash: %s", hash);
@@ -170,7 +189,7 @@ static void md5_finish(gpointer pdata, gboolean cancelled)
         if (data) {
                 gtk_widget_destroy(data->label);
                 gtk_widget_destroy(data->hash);
-                //g_object_unref(data->label);
+                g_object_unref(data->label);
                 g_object_unref(data->hash);
 
                 free(data);
