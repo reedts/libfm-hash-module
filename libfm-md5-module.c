@@ -1,3 +1,11 @@
+/**
+ * @file libfm-md5-module.c
+ * @brief Contains all necessary functions for md5 hashing in libfm.
+ *
+ * This file provides functions that can be used in a module for the
+ * libfm library to show md5 hash sums for files in the file properties
+ * dialog.
+ */
 #include <glib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -24,19 +32,19 @@ struct md5_row {
         GtkWidget *hash;
 };
 
-/*!
- * \brief Calculates the hash of a file.
+/**
+ * @brief Calculates the hash of a file.
  *
  * The function \p md5_calc_hash calculated the md5 hash value of
  * the file in path \p path. The function will return \p NULL on
  * error, idicating the type of error in \p err. The returned string
  * has to be freed manually.
  *
- * \param path Absolute path to the file whose hash shall be
+ * @param path Absolute path to the file whose hash shall be
  *             calculated.
- * \param err  \p GError indicating th type of the error, if the
+ * @param err  \p GError indicating th type of the error, if the
  *             function should return \p NULL.
- * \return     The string representation of the md5 hash or \p NULL,
+ * @return     The string representation of the md5 hash or \p NULL,
  *             if an error occured.
  */
 static gchar *md5_calc_hash(FmPath *path, GError **err)
@@ -92,6 +100,18 @@ err_clean_up_ret:
         return NULL;
 }
 
+/**
+ * @brief Checks whether files contains only one valid file.
+ *
+ * The function \p md5_check_file checks, whether the \p FmFileInfoList
+ * \p *files contains only one file. This file must not be a directory
+ * or a symlink. Calculating the md5 hash of both is not eligible.
+ *
+ * @param files \p FmFileInfoList containing all selected files
+ *
+ * @return \p TRUE , if \p files contains only one file that is not a dirctory
+ *         nor a symlink. \p FALSE otherwise.
+ */
 static inline gboolean md5_check_file(FmFileInfoList *files)
 {
         FmFileInfo *file = fm_file_info_list_peek_head(files);
@@ -102,6 +122,23 @@ static inline gboolean md5_check_file(FmFileInfoList *files)
 }
 
 
+/**
+ * @brief Initialises the md5 module.
+ *
+ * The function \p md5_init initialises the md5 module using the provided
+ * parameters passed by libfm. It will initialise the needed data structures
+ * and calculate the hash of the given file using \p md5_calc_hash but only,
+ * if \p md5_check_file gives it ok. It will otherwise return \p NULL , if
+ * no valid file is specified or the hash could not be calculated because of
+ * other reasons.
+ *
+ * @param ui \p GtkBuilder providing functionality to interact with the GUI
+ *           of the file properties window.
+ * @param files \p FmFileInfoList containing all selected files.
+ *
+ * @return A \p gpointer to the \code struct md5_row \endcode containing
+ *         pointers to \p GtkWidget s with label and hash.
+ */
 static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
 {
         GError *err;
@@ -183,6 +220,16 @@ no_output:
         return NULL;
 }
 
+/**
+ * @brief Finalizes the md5 module.
+ *
+ * The function \p md5_finish finalizes the md5 module in such way that all
+ * used resources are freed. All \p GtkWidgets used by this module will be 
+ * unreferenced via \p g_object_unref . 
+ *
+ * @param pdata Pointer to a \code struct md5_row \endcode containing
+ *              Pointers to widgets used by this module.
+ */
 static void md5_finish(gpointer pdata, gboolean cancelled)
 {       
         struct md5_row *data = pdata;

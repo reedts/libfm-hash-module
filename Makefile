@@ -1,4 +1,4 @@
-.PHONY: all install clean dist-clean
+.PHONY: all install doc clean dist-clean
 
 CC = gcc
 CFLAGS += -Wall -Werror -Wno-deprecated-declarations -pedantic -shared -fPIC -Wl,-z,defs
@@ -13,9 +13,15 @@ md5-module.so: libfm-md5-module.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $(GTKDIRS) $(FMLIBS) -o $@ $^ 
 clean:
 	rm -rf md5-module.so
+	$(MAKE) -C doc/latex clean
+	rm -rf doc
 
 install: all
 	cp md5-module.so /usr/lib/libfm/modules/
 
-dist-clean:
+doc:
+	doxygen
+	$(MAKE) -C doc/latex
+
+dist-clean: clean
 	rm -f /usr/lib/libfm/modules/md5-module.so
