@@ -19,7 +19,7 @@ GQuark md5_calc_hash_error_quark(void)
 }
 
 
-struct md5_row {
+struct md5_data {
         GtkWidget *label;
         GtkWidget *hash;
 };
@@ -126,28 +126,27 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
                 return NULL;
         }
         
-        struct md5_row *row = malloc(sizeof(struct md5_row));
-        memset(row, 0x00, sizeof(struct md5_row));
+        struct md5_data *data = g_malloc0(sizeof(struct md5_data));
 
-        row->label = gtk_label_new(NULL);
-        row->hash = gtk_label_new(NULL);
+        data->label = gtk_label_new(NULL);
+        data->hash = gtk_label_new(NULL);
 
-        g_object_ref_sink(row->label);
-        g_object_ref_sink(row->hash);
+        g_object_ref_sink(data->label);
+        g_object_ref_sink(data->hash);
 
-        gtk_label_set_markup(GTK_LABEL(row->label), "<b>MD5sum:</b>");
-        gtk_misc_set_alignment(GTK_MISC(row->label), 0.0f, 0.5f);
+        gtk_label_set_markup(GTK_LABEL(data->label), "<b>MD5sum:</b>");
+        gtk_misc_set_alignment(GTK_MISC(data->label), 0.0f, 0.5f);
 
-        gtk_label_set_line_wrap(GTK_LABEL(row->hash), TRUE);
+        gtk_label_set_line_wrap(GTK_LABEL(data->hash), TRUE);
 
         table = GTK_WIDGET(gtk_builder_get_object(ui, "general_table"));
         gtk_table_get_size(GTK_TABLE(table), &n_row, &n_col);
-        gtk_table_attach_defaults(GTK_TABLE(table), row->label, 0, 1, n_row, n_row+1);
-        gtk_table_attach_defaults(GTK_TABLE(table), row->hash, 2, 3, n_row, n_row+1);
+        gtk_table_attach_defaults(GTK_TABLE(table), data->label, 0, 1, n_row, n_row+1);
+        gtk_table_attach_defaults(GTK_TABLE(table), data->hash, 2, 3, n_row, n_row+1);
 
 
-        gtk_widget_show(row->label);
-        gtk_widget_show(row->hash);
+        gtk_widget_show(data->label);
+        gtk_widget_show(data->hash);
         
         /* Try to calculate HASH here */
         err = NULL;
@@ -167,32 +166,32 @@ static gpointer md5_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
 
         g_warning("Hash: %s", hash);
 
-        gtk_label_set_text(GTK_LABEL(row->hash), hash);
+        gtk_label_set_text(GTK_LABEL(data->hash), hash);
 
-        return row;
+        return data;
 
 no_output:
 
-        gtk_widget_destroy(row->label);
-        gtk_widget_destroy(row->hash);
-        g_object_unref(row->label);
-        g_object_unref(row->hash);
+        gtk_widget_destroy(data->label);
+        gtk_widget_destroy(data->hash);
+        g_object_unref(data->label);
+        g_object_unref(data->hash);
 
-        free(row);
+        g_free(data);
         
         return NULL;
 }
 
 static void md5_finish(gpointer pdata, gboolean cancelled)
 {       
-        struct md5_row *data = pdata;
+        struct md5_data *data = pdata;
         if (data) {
                 gtk_widget_destroy(data->label);
                 gtk_widget_destroy(data->hash);
                 g_object_unref(data->label);
                 g_object_unref(data->hash);
 
-                free(data);
+                g_free(data);
         }
 }
 
