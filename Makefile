@@ -1,27 +1,49 @@
-.PHONY: all install doc clean dist-clean
+.PHONY: all install doc clean dist-clean tags folder
 
-CC = gcc
-CFLAGS += -Wall -Werror -Wno-deprecated-declarations -pedantic -shared -fPIC -Wl,-z,defs
-LDFLAGS += -lbsd
+INC_DIR := include
+LIB_DIR := lib
+OBJ_DIR := obj
+SRC_DIR := src
 
 FMLIBS := $(shell pkg-config --cflags --libs libfm)
 GTKDIRS := $(shell pkg-config --cflags --libs gtk+-3.0)
 
-all: md5-module.so
 
-md5-module.so: libfm-md5-module.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(GTKDIRS) $(FMLIBS) -o $@ $^ 
+CC = gcc
+CFLAGS += -Wall -Werror -Wno-deprecated-declarations -pedantic -shared -fPIC\
+	  -Wl,-z,defs -I$(INC_DIR) $(FMLIBS) $(GTKDIRS)
+LDFLAGS += -lbsd
+
+OBJS := $(OBJ_DIR)/hash-module.o $(OBJ_DIR)/hash.o $(OBJ_DIR)/hash-md5.o
+
+
+all: folder $(LIB_DIR)/hash-module.so
+
+folder:
+	mkdir -p $(OBJ_DIR)
+	mkdir -p $(LIB_DIR)
+
+$(LIB_DIR)/hash-module.so: $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(FMLIBS) -o $@ $^ 
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/%.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 clean:
-	rm -rf md5-module.so
+	rm -rf $(LIB_DIR)
+	rm -rf $(OBJ_DIR)
 	$(MAKE) -C doc/latex clean
 	rm -rf doc
 
 install: all
-	cp md5-module.so /usr/lib/libfm/modules/
+	cp $(LIB_DIR)/hash-module.so /usr/lib/libfm/modules/
 
 doc:
 	doxygen
 	$(MAKE) -C doc/latex
 
 dist-clean: clean
-	rm -f /usr/lib/libfm/modules/md5-module.so
+	rm -f /usr/lib/libfm/modules/hash-module.so
+
+tags:
+	ctags *.[ch]
