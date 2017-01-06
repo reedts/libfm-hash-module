@@ -13,7 +13,9 @@ enum HASH_TYPE {
         HASH_COUNT
 };
 
-extern GThread *hash_start_calc(struct hash_data *data, enum HASH_TYPE type, GError **err);
+GQuark hash_calc_error_quark(void);
+
+GThread *hash_start_calc(struct hash_data *data, enum HASH_TYPE type, GError **err);
 
 
 

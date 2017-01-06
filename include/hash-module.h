@@ -27,7 +27,7 @@
  * @return A \p gpointer to the \code struct md5_row \endcode containing
  *         pointers to \p GtkWidget s with label and hash.
  */
-extern gpointer hash_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files);
+gpointer hash_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files);
 
 /**
  * @brief Finalizes the md5 module.
@@ -39,7 +39,7 @@ extern gpointer hash_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files
  * @param pdata Pointer to a \code struct md5_row \endcode containing
  *              Pointers to widgets used by this module.
  */
-extern void hash_finish(gpointer pdata, gboolean cancelled);
+void hash_finish(gpointer pdata, gboolean cancelled);
 
 
 extern FmFilePropertiesExtensionInit fm_module_init_gtk_file_prop;
