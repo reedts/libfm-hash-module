@@ -120,7 +120,7 @@ void hash_finish(gpointer pdata, gboolean cancelled)
                 gtk_widget_destroy(data->hash);
                 g_object_unref(data->label);
                 g_object_unref(data->hash);
-                g_object_unref(data->path);
+                fm_path_unref(data->path);
 
                 g_free(data);
         }
