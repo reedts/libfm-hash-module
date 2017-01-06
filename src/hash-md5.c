@@ -10,7 +10,7 @@
 
 #define MD5_HASH_ERR hash_calc_md5_error_quark()
 
-GQuark hash_calc_md5_error_quark(void)
+GQuark hash_calc_md5_error_quark()
 {
         return g_quark_from_static_string("MD5_CALC_HASH_ERR");
 }
@@ -23,7 +23,7 @@ gpointer hash_job_calc_md5(gpointer md5_data)
         
         data = md5_data;
 
-        hash_str = hash_calc_md5(data->path, &err);
+        hash_str = _hash_calc_md5(data->path, &err);
 
         if (!hash_str) {
                 g_warning(err->message);
@@ -36,7 +36,7 @@ gpointer hash_job_calc_md5(gpointer md5_data)
 }
 
 
-gchar *hash_calc_md5(FmPath *path, GError **err)
+gchar *_hash_calc_md5(FmPath *path, GError **err)
 {
         char *path_str;
         gchar *hash_str;
