@@ -10,8 +10,6 @@
 GQuark hash_calc_md5_error_quark(void);
 
 
-gpointer hash_job_calc_md5(gpointer hash_data);
-
 /**
  * @brief Calculates the hash of a file.
  *
@@ -27,7 +25,7 @@ gpointer hash_job_calc_md5(gpointer hash_data);
  * @return     The string representation of the md5 hash or \p NULL,
  *             if an error occured.
  */
-gchar *_hash_calc_md5(FmPath *path, GError **err); 
+gchar *hash_calc_md5(FmPath *path, GError **err); 
 
 
 #endif /* _HASH_MD5_H_ */

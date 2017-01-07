@@ -6,17 +6,12 @@
 
 #include <glib.h>
 
-struct hash_data;
-
-enum HASH_TYPE {
-        HASH_MD5 = 0,
-        HASH_COUNT
-};
+#include <hash-data.h>
 
 GQuark hash_calc_error_quark(void);
 
 GThread *hash_start_calc(struct hash_data *data, enum HASH_TYPE type, GError **err);
 
-
+gpointer _hash_job(gpointer data);
 
 #endif /* _HASH_H_ */

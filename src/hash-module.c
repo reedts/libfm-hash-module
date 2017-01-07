@@ -67,12 +67,14 @@ gpointer hash_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
         
         struct hash_data *data = g_malloc0(sizeof(struct hash_data));
 
-        data->label = gtk_label_new(NULL);
-        data->hash  = gtk_label_new(NULL);
-        data->path  = path;
+        data->label     = gtk_label_new(NULL);
+        data->hash      = gtk_label_new(NULL);
+        data->spinner   = gtk_spinner_new();
+        data->path      = path;
 
         g_object_ref_sink(data->label);
         g_object_ref_sink(data->hash);
+        g_object_ref_sink(data->spinner);
         fm_path_ref(data->path);
 
         gtk_label_set_markup(GTK_LABEL(data->label), "<b>MD5sum:</b>");
@@ -85,11 +87,13 @@ gpointer hash_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
         gtk_table_get_size(GTK_TABLE(table), &n_row, &n_col);
         gtk_table_attach_defaults(GTK_TABLE(table), data->label, 0, 1, n_row, n_row+1);
         gtk_table_attach_defaults(GTK_TABLE(table), data->hash, 2, 3, n_row, n_row+1);
+        gtk_table_attach_defaults(GTK_TABLE(table), data->spinner, 3, 4, n_row, n_row+1);
 
 
         gtk_widget_show(data->label);
         gtk_widget_show(data->hash);
-        
+        gtk_widget_show(data->spinner);
+
         /* Try to calculate HASH here */
         err = NULL;
 
@@ -104,8 +108,10 @@ no_output:
         
         gtk_widget_destroy(data->label);
         gtk_widget_destroy(data->hash);
+        gtk_widget_destroy(data->spinner);
         g_object_unref(data->label);
         g_object_unref(data->hash);
+        g_object_unref(data->spinner);
         fm_path_unref(data->path);
 
         g_free(data);
@@ -119,8 +125,10 @@ void hash_finish(gpointer pdata, gboolean cancelled)
         if (data) {
                 gtk_widget_destroy(data->label);
                 gtk_widget_destroy(data->hash);
+                gtk_widget_destroy(data->spinner);
                 g_object_unref(data->label);
                 g_object_unref(data->hash);
+                g_object_unref(data->spinner);
                 fm_path_unref(data->path);
 
                 g_free(data);
@@ -129,8 +137,8 @@ void hash_finish(gpointer pdata, gboolean cancelled)
 
 
 FmFilePropertiesExtensionInit fm_module_init_gtk_file_prop = {
-        .init = &hash_init,
-        .finish = &hash_finish
+        .init = hash_init,
+        .finish = hash_finish
 };
 
 FM_DEFINE_MODULE(gtk_file_prop, *)
