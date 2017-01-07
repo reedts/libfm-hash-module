@@ -79,6 +79,7 @@ gpointer hash_init(GtkBuilder *ui, gpointer uidata, FmFileInfoList *files)
         gtk_misc_set_alignment(GTK_MISC(data->label), 0.0f, 0.5f);
 
         gtk_label_set_line_wrap(GTK_LABEL(data->hash), TRUE);
+        gtk_label_set_selectable(GTK_LABEL(data->hash), TRUE);
 
         table = GTK_WIDGET(gtk_builder_get_object(ui, "general_table"));
         gtk_table_get_size(GTK_TABLE(table), &n_row, &n_col);
