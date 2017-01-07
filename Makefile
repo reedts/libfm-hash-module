@@ -30,10 +30,10 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/%.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(LIB_DIR)
-	rm -rf $(OBJ_DIR)
-	$(MAKE) -C doc/latex clean
-	rm -rf doc
+	-rm -rf $(LIB_DIR)
+	-rm -rf $(OBJ_DIR)
+	-$(MAKE) -C doc/latex clean
+	-rm -rf doc
 
 install: all
 	cp $(LIB_DIR)/hash-module.so /usr/lib/libfm/modules/
@@ -43,7 +43,7 @@ doc:
 	$(MAKE) -C doc/latex
 
 dist-clean: clean
-	rm -f /usr/lib/libfm/modules/hash-module.so
+	-rm -f /usr/lib/libfm/modules/hash-module.so
 
 tags:
 	ctags *.[ch]
